@@ -3,9 +3,13 @@ package com.controller;
 import com.dim.fxapp.entity.criteria.QuotesCriteriaBuilder;
 import com.dim.fxapp.entity.enums.Currency;
 import com.interfaces.RequestData;
+import com.netflix.appinfo.InstanceInfo;
 import com.netflix.discovery.EurekaClient;
+import com.netflix.discovery.shared.Application;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,11 +35,18 @@ public class ControllerQuotes {
     @Qualifier("Quotes")
     private RequestData quotes;
 
+    @Value("${service.persist}")
+    private String persistService;
+
     public List<Currency> listOfCurrency = new ArrayList<>(Arrays.asList(Currency.values()));
     public Set<QuotesCriteriaBuilder> quotesCriteriaBuilders = new HashSet<>();
 
     @RequestMapping(value="/reload", method = RequestMethod.GET)
     public void reload(){
+
+        Application application = discoveryClient.getApplication(persistService);
+        InstanceInfo instanceInfo = application.getInstances().get(0);
+        String url = "http://" + instanceInfo.getIPAddr() + ":" + instanceInfo.getPort() + "/" + "quotes/";
 
         LocalDate from = LocalDate.now().minusDays(10);
         LocalDate to = LocalDate.now();
