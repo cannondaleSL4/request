@@ -26,50 +26,48 @@ import java.util.*;
 public class ControllerQuotes {
 
     @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
-    private EurekaClient discoveryClient;
-
-    @Autowired
     @Qualifier("Quotes")
     private RequestData quotes;
-
-    @Value("${service.persist}")
-    private String persistService;
-
-    public List<Currency> listOfCurrency = new ArrayList<>(Arrays.asList(Currency.values()));
-    public Set<QuotesCriteriaBuilder> quotesCriteriaBuilders = new HashSet<>();
 
     @RequestMapping(value="/reload", method = RequestMethod.GET)
     public void reload(){
 
-        Application application = discoveryClient.getApplication(persistService);
-        InstanceInfo instanceInfo = application.getInstances().get(0);
-        String url = "http://" + instanceInfo.getIPAddr() + ":" + instanceInfo.getPort() + "/" + "quotes/";
-
-        LocalDate from = LocalDate.now().minusDays(10);
-        LocalDate to = LocalDate.now();
-
         List<Currency> listOfCurrency = new ArrayList<>(Arrays.asList(Currency.values()));
-        Set<QuotesCriteriaBuilder> quotesCriteriaBuilders = new HashSet<>();
+        List<LocalDate> localDateList = devideDate(LocalDate.now().minusYears(5),
+                LocalDate.now());
 
-        listOfCurrency.forEach(currency ->{
-            QuotesCriteriaBuilder quotesCriteriaBuilder = QuotesCriteriaBuilder.builder()
-                    .currency(currency)
-                    .from(from)
-                    .to(to)
-                    .build();
-            quotesCriteriaBuilders.add(quotesCriteriaBuilder);
+        Set<QuotesCriteriaBuilder> criteriaBuilderSet = new HashSet<>();
+
+        listOfCurrency.forEach(currency -> {
+            localDateList.forEach(localDate -> {
+                for(int i=0; i < localDateList.size()-1;i++){
+                    criteriaBuilderSet.add(getCriteria(currency, localDateList.get(i),localDateList.get(i+1)));
+                }
+            });
         });
-
-        quotesCriteriaBuilders.forEach(quotesCriteriaBuilder -> {
-            //restTemplate.execute()
-        });
+        quotes.getRequest(criteriaBuilderSet);
+    }
 
 
-//        return ResponseEntity.ok()
-//                .cacheControl(CacheControl.maxAge(600, TimeUnit.SECONDS))
-//                .body(quotes.getRequest(quotesCriteriaBuilders));
+    private List<LocalDate> devideDate(LocalDate from,LocalDate to){
+        List<LocalDate> listOfDate = new ArrayList<>();
+        while (from.isBefore(to)){
+            listOfDate.add(from);
+            from = from.plusMonths(1);
+        }
+        listOfDate.add(to);
+        return listOfDate;
+    }
+
+    private QuotesCriteriaBuilder getCriteria(Currency currency, LocalDate from, LocalDate to){
+        QuotesCriteriaBuilder quotesCriteriaBuilder = QuotesCriteriaBuilder.builder()
+            .currency(currency)
+            .from(from)
+            .to(to)
+            .build();
+        return quotesCriteriaBuilder;
     }
 }
+
+
+//https://dzone.com/articles/microservices-communication-service-to-service
