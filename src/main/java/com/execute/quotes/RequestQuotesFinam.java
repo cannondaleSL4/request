@@ -33,6 +33,9 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
 
     @Override
     public Map<String, Object> getRequest(Set<QuotesCriteriaBuilder> criteriaBuilders) {
+        localResp.clear();
+        mapResp.clear();
+//        criteriaBuilders
         return null;
     }
 
