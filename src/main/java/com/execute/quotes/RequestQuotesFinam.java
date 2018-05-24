@@ -52,7 +52,7 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
     private void getFileParseFile(QuotesCriteriaBuilder criteriaBuilder){
         try {
             CloseableHttpClient client = HttpClientBuilder.create().build();
-            HttpGet request = new HttpGet(String.format(MAIN, ));
+            HttpGet request = new HttpGet(String.format(MAIN));
             request.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.125 Safari/537.36");
             HttpResponse response = client.execute(request);
 
