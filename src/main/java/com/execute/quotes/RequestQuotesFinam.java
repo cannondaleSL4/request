@@ -19,9 +19,12 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 /**
  * Created by dima on 07.05.18.
@@ -61,6 +64,8 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
                 }
             }
         }
+
+        persist();
 
 
 //        criteriaBuilders.forEach(creteria -> getFileParseFile(creteria));
@@ -140,10 +145,25 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
         }
     }
 
-    private void persist(Map<String, Object> request){
+    private void persist(){
         Application application = discoveryClient.getApplication(persistService);
         InstanceInfo instanceInfo = application.getInstances().get(0);
         String url = "http://" + instanceInfo.getIPAddr() + ":" + instanceInfo.getPort() + "/" + "quotes/";
-        restTemplate.put(url,request.get("successful"));
+
+        final File folder = new File(filepath);
+        List<File> fileArray = new ArrayList<>(Arrays.asList(folder.listFiles()));
+
+        for(File file: fileArray){
+            if(FileUtils.sizeOf(file)!=0){
+                try (Stream<String> stream = Files.lines(Paths.get(file.toURI()))) {
+                    stream.forEach(System.out::println);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+
+//        restTemplate.put(url);
     }
 }
