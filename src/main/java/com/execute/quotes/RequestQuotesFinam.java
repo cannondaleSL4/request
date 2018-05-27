@@ -1,11 +1,14 @@
 package com.execute.quotes;
 
 import com.dim.fxapp.entity.criteria.QuotesCriteriaBuilder;
+import com.dim.fxapp.entity.enums.Period;
+import com.dim.fxapp.entity.impl.Quotes;
 import com.dim.fxapp.entity.impl.QuotesLive;
 import com.interfaces.RequestData;
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.discovery.EurekaClient;
 import com.netflix.discovery.shared.Application;
+import com.util.RoundOfNumber;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -19,8 +22,10 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import java.io.*;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -155,15 +160,41 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
 
         for(File file: fileArray){
             if(FileUtils.sizeOf(file)!=0){
-                try (Stream<String> stream = Files.lines(Paths.get(file.toURI()))) {
-                    stream.forEach(System.out::println);
+                try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+                    String line;
+                    Set<Quotes> setOfQuotes = new LinkedHashSet<>();
+                    while ((line = br.readLine()) != null) {
+                        if(!line.contains("TICKER")){
+                            String [] array = line.split(",");
+                            Period period = null;
+                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yy HH:mm:ss");
+                            if (array[1].equals("D"))period = Period.DAY;
+                            if (array[1].equals("5"))period = Period.FIVEMINUTES;
+                            if (array[1].equals("15"))period = Period.FIVETEENMINUTES;
+                            if (array[1].equals("W"))period = Period.WEEK;
+                            if (array[1].equals("M"))period = Period.MONTH;
+                            Quotes quotes = Quotes.builder()
+                                    .currency(array[0])
+                                    .period(period)
+                                    .data(LocalDateTime.parse(array[2]+" " + array[3], formatter))
+                                    .open(RoundOfNumber.round(array[4]))
+                                    .high(RoundOfNumber.round(array[5]))
+                                    .low(RoundOfNumber.round(array[6]))
+                                    .close(RoundOfNumber.round(array[7]))
+                                    .build();
+//                            setOfQuotes.add(quotes);
+                            restTemplate.put(url,quotes);
+
+                        }
+                    }
+//                    restTemplate.put(url,setOfQuotes);
+
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         }
-
-
-//        restTemplate.put(url);
     }
 }
