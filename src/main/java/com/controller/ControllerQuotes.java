@@ -38,20 +38,41 @@ public class ControllerQuotes {
         );
     }
 
+    @RequestMapping(value="/reloadweek", method = RequestMethod.GET)
+    public void reloadWeak(){
+        reloadFromTo(
+                LocalDate.now().minusWeeks(1).format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
+                LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+        );
+    }
+
+    @RequestMapping(value="/reloadmonth", method = RequestMethod.GET)
+    public void reloadMonth(){
+        LocalDate.now().minusMonths(1);
+        LocalDate.now();
+
+        reloadFromTo(
+                LocalDate.now().minusMonths(1).format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
+                LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
+        );
+    }
+
+
+
     @RequestMapping(value="/reload/{from}/{to}", method = RequestMethod.GET)
     public void reloadFromTo(@PathVariable("from")String from,@PathVariable("from")String to ){
         Set<Currency> setOfCurrency = new LinkedHashSet<>(Arrays.asList(Currency.values()));
         Set<Period> setOfPeriod = new LinkedHashSet<>(Arrays.asList(Period.values()));
         Set<QuotesCriteriaBuilder> criteriaBuilderSet = new HashSet<>();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d-MM-yyyy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         LocalDate start = LocalDate.from(LocalDate.parse(from,formatter).atStartOfDay());
         LocalDate end = LocalDate.from(LocalDate.parse(to,formatter).atStartOfDay());
 
         setOfCurrency.forEach(currency -> {
             setOfPeriod.forEach(period -> {
                 List<LocalDate> localDateList = DevideDate.devideDate(
-                        LocalDate.now().minusYears(10),
-                        LocalDate.now(),
+                        start,
+                        end,
                         period
                 );
                 localDateList.forEach(localDate ->{
