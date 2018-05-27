@@ -6,6 +6,7 @@ import com.interfaces.RequestData;
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.discovery.EurekaClient;
 import com.netflix.discovery.shared.Application;
+import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -17,12 +18,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.client.RestTemplate;
 
 import javax.persistence.criteria.CriteriaBuilder;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Map;
-import java.util.Set;
+import java.io.*;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by dima on 07.05.18.
@@ -41,58 +40,101 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
     @Value("${currency.quotes}")
     protected String MAIN;
 
+    @Value("${currency.filepath}")
+    protected String filepath;
+
     @Override
     public Map<String, Object> getRequest(Set<QuotesCriteriaBuilder> criteriaBuilders) {
         localResp.clear();
         mapResp.clear();
-        criteriaBuilders.forEach(creteria -> getFileParseFile(creteria));
+
+        //this block only for fill on base for begin
+        boolean isAnyEmty=true;
+        while(isAnyEmty){
+            criteriaBuilders.forEach(creteria -> getFileParseFile(creteria));
+            final File folder = new File(filepath);
+            List<File> fileArray = new ArrayList<>(Arrays.asList(folder.listFiles()));
+            isAnyEmty=false;
+            for(File file : fileArray){
+                if(FileUtils.sizeOf(file)==0){
+                    isAnyEmty=true;
+                }
+            }
+        }
+
+
+//        criteriaBuilders.forEach(creteria -> getFileParseFile(creteria));
         return null;
     }
 
     private void getFileParseFile(QuotesCriteriaBuilder criteriaBuilder){
+        String filename = criteriaBuilder.getCurrency().toString()+"-"+
+                criteriaBuilder.getFrom()+"-"+
+                criteriaBuilder.getTo()+"-"+
+                criteriaBuilder.getPeriod();
+
+        String localFilePath = filepath +"/" + filename + ".csv";
+        File f = new File(localFilePath);
+        try{
+            if(!f.exists()){
+                FileUtils.touch(f);
+                executeRequest(criteriaBuilder,f);
+            } else {
+                if(FileUtils.sizeOf(f)==0){
+                    FileUtils.forceDelete(f);
+                    FileUtils.touch(f);
+                    executeRequest(criteriaBuilder,f);
+                }
+            }
+        }catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void executeRequest(QuotesCriteriaBuilder criteriaBuilder, File f){
+        String stringForRequest = String.format(MAIN,
+                criteriaBuilder.getCurrency().getByCurrensy(criteriaBuilder.getCurrency().toString()),
+                criteriaBuilder.getCurrency().toString(),
+                criteriaBuilder.getFrom().getDayOfMonth(),
+                criteriaBuilder.getFrom().getMonthValue(),
+                criteriaBuilder.getFrom().getYear(),
+                criteriaBuilder.getFrom().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
+                criteriaBuilder.getTo().getDayOfMonth(),
+                criteriaBuilder.getTo().getMonthValue(),
+                criteriaBuilder.getTo().getYear(),
+                criteriaBuilder.getTo().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
+                criteriaBuilder.getPeriod().getCodeByPeriod(criteriaBuilder.getPeriod().toString()),
+                f.getName(),
+                criteriaBuilder.getCurrency().toString()
+        );
+
         try {
             CloseableHttpClient client = HttpClientBuilder.create().build();
-            HttpGet request = new HttpGet(String.format(MAIN));
+            HttpGet request = new HttpGet(stringForRequest);
             request.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.125 Safari/537.36");
             HttpResponse response = client.execute(request);
 
             HttpEntity entity = response.getEntity();
 
-            int responseCode = response.getStatusLine().getStatusCode();
-
-//            System.out.println("Request Url: " + request.getURI());
-//            System.out.println("Response Code: " + responseCode);
-
-            InputStream is = entity.getContent();
-
-            //String filePath = "./temp/AUDCAD.csv";
-
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-
-            // write the output to stdout
-            String line;
-            while ((line = reader.readLine()) != null){
-                System.out.println(line);
+            if(response.getStatusLine().getStatusCode() == 200){
+                InputStream is = entity.getContent();
+                FileOutputStream fos = new FileOutputStream(f);
+                int inByte;
+                while ((inByte = is.read()) != -1) {
+                    fos.write(inByte);
+                }
+                is.close();
+                fos.close();
+                client.close();
             }
-            reader.close();
-//            FileUtils.touch(new File(filePath));
-
-//            FileOutputStream fos = new FileOutputStream(new File(filePath));
-//
-//            int inByte;
-//            while ((inByte = is.read()) != -1) {
-//                fos.write(inByte);
-//            }
-//            is.close();
-//            fos.close();
-//            client.close();
-//            System.out.println("File Download Completed!!!");
+            TimeUnit.NANOSECONDS.sleep(1000000000);
         } catch (ClientProtocolException e) {
             e.printStackTrace();
         } catch (UnsupportedOperationException e) {
             e.printStackTrace();
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
