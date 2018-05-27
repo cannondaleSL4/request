@@ -42,19 +42,14 @@ public class ControllerQuotes {
     public void reloadWeak(){
         reloadFromTo(
                 LocalDate.now().minusWeeks(1).format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
-                LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-        );
+                LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
     }
 
     @RequestMapping(value="/reloadmonth", method = RequestMethod.GET)
     public void reloadMonth(){
-        LocalDate.now().minusMonths(1);
-        LocalDate.now();
-
         reloadFromTo(
                 LocalDate.now().minusMonths(1).format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
-                LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
-        );
+                LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
     }
 
 

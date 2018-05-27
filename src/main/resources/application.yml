@@ -17,7 +17,7 @@ eureka:
 currency:
   oldlivequotes : http://currencies.apps.grandtrunk.net/getlatest/%s/%s
   livequotes: http://export.finam.ru/filename.csv?market=5&em=%s&code=%s&apply=0&df=5&mf=4&yf=2018&from=05.05.2018&dt=5&mt=4&yt=2018&to=05.05.2018&p=8&f=filename&e=.csv&cn=%s&dtf=4&tmf=3&MSOR=1&mstimever=0&sep=1&sep2=2&datf=1&at=1&fsp=1
-  quotes: http://export.finam.ru/filename.csv?market=5&em=%s&code=%s&apply=0&df=%s&mf=%s&yf=%s&from=%s&dt=%s&mt=%s&yt=%s&to=%s&p=%s&f=%s&e=.csv&cn=%s&dtf=4&tmf=3&MSOR=1&mstimever=0&sep=1&sep2=2&datf=1&at=1&fsp=1
+  quotes: http://export.finam.ru/%s?market=5&em=%s&code=%s&apply=0&df=%s&mf=%s&yf=%s&from=%s&dt=%s&mt=%s&yt=%s&to=%s&p=%s&f=%s&e=.csv&cn=%s&dtf=4&tmf=3&MSOR=1&mstimever=0&sep=1&sep2=2&datf=1&at=1&fsp=1
   filepath: /mnt/3a9fc5c4-bfb3-4721-9434-10c35b009622/quotes
 #currency:
 #  oldlivequotes : http://currencies.apps.grandtrunk.net/getlatest/%s/%s
@@ -46,7 +46,7 @@ currency:
 #dt, mt, yt - дата по которую выдаются котировки
 #
 #p - временной интервал (7 означает, что временной интервал 1 час)
-
+# https://www.finam.ru/profile/forex/gbp-cad/export/
 # p=2 - minutes
 # p=3 - 5 minutes
 # p=4 - 10 minutes

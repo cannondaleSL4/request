@@ -93,18 +93,19 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
 
     private void executeRequest(QuotesCriteriaBuilder criteriaBuilder, File f){
         String stringForRequest = String.format(MAIN,
+                f.getName(),
                 criteriaBuilder.getCurrency().getByCurrensy(criteriaBuilder.getCurrency().toString()),
                 criteriaBuilder.getCurrency().toString(),
                 criteriaBuilder.getFrom().getDayOfMonth(),
-                criteriaBuilder.getFrom().getMonthValue(),
+                criteriaBuilder.getFrom().getMonthValue()-1,
                 criteriaBuilder.getFrom().getYear(),
-                criteriaBuilder.getFrom().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
+                criteriaBuilder.getFrom().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
                 criteriaBuilder.getTo().getDayOfMonth(),
-                criteriaBuilder.getTo().getMonthValue(),
+                criteriaBuilder.getTo().getMonthValue()-1,
                 criteriaBuilder.getTo().getYear(),
-                criteriaBuilder.getTo().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
+                criteriaBuilder.getTo().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
                 criteriaBuilder.getPeriod().getCodeByPeriod(criteriaBuilder.getPeriod().toString()),
-                f.getName(),
+                f.getName().split(("\\.(?=[^\\.]+$)"))[0],
                 criteriaBuilder.getCurrency().toString()
         );
 
@@ -127,7 +128,7 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
                 fos.close();
                 client.close();
             }
-            TimeUnit.NANOSECONDS.sleep(1000000000);
+            TimeUnit.NANOSECONDS.sleep(10000000);
         } catch (ClientProtocolException e) {
             e.printStackTrace();
         } catch (UnsupportedOperationException e) {
