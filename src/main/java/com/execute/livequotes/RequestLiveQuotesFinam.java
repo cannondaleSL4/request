@@ -1,8 +1,10 @@
 package com.execute.livequotes;
 
+import com.dim.fxapp.entity.FinancialEntity;
 import com.dim.fxapp.entity.criteria.QuotesCriteriaBuilder;
 import com.dim.fxapp.entity.impl.QuotesLive;
 import com.exeption.ServerRequestExeption;
+import com.google.common.collect.ImmutableMap;
 import com.interfaces.RequestData;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -17,6 +19,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -30,9 +33,10 @@ public class RequestLiveQuotesFinam extends RequestData<QuotesLive> {
     @Value("${currency.livequotes}")
     protected String MAIN;
 
+    protected Set<FinancialEntity> localResp = new LinkedHashSet<>();
+
     @Override
     public Map<String, Object> getRequest(Set<QuotesCriteriaBuilder> quotesCriteriaBuilders) {
-        mapResp.clear();
         quotesCriteriaBuilders.forEach(quotesCriteriaBuilder -> {
                     String currencyStr = quotesCriteriaBuilder.getCurrency().toString();
                     Integer number = quotesCriteriaBuilder.getCurrency().getByCurrensy(currencyStr);
@@ -45,12 +49,12 @@ public class RequestLiveQuotesFinam extends RequestData<QuotesLive> {
                     } catch (ServerRequestExeption serverRequestExeption) {
                         serverRequestExeption.printStackTrace();
                     } catch (Exception e) {
-                        mapResp.put("error", messageError);
+                        mapResp = ImmutableMap.<String,Object>builder().put("error",messageError).build();
                     }
                 }
         );
         if (mapResp.isEmpty()) {
-            mapResp.put("successful", localResp);
+            mapResp = ImmutableMap.<String,Object>builder().put("successful",localResp).build();
         }
         return mapResp;
     }

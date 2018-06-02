@@ -1,5 +1,6 @@
 package com.execute.livequotes;
 
+import com.dim.fxapp.entity.FinancialEntity;
 import com.dim.fxapp.entity.criteria.QuotesCriteriaBuilder;
 import com.dim.fxapp.entity.impl.QuotesLive;
 import com.exeption.ServerRequestExeption;
@@ -21,6 +22,8 @@ import java.util.*;
 public class RequestLiveQuotesOldVersion extends RequestData<QuotesLive> {
     @Value("${currency.oldlivequotes}")
     protected String MAIN;
+
+    protected Set<FinancialEntity> localResp = new LinkedHashSet<>();
 
     @Override
     public Map<String,Object> getRequest(Set<QuotesCriteriaBuilder> quotesCriteriaBuilders){
@@ -50,7 +53,7 @@ public class RequestLiveQuotesOldVersion extends RequestData<QuotesLive> {
                             .price(RoundOfNumber.round(strPrice))
                             .localDateTime(LocalDateTime.now())
                             .build();
-                    super.localResp.add(quotesLive);
+                    localResp.add(quotesLive);
                 }
             }else{
                 throw new ServerRequestExeption(messageError);

@@ -5,6 +5,8 @@ import com.dim.fxapp.entity.enums.Period;
 import com.dim.fxapp.entity.impl.Quotes;
 import com.dim.fxapp.entity.impl.QuotesLive;
 import com.exeption.NoServerInEurekaExeption;
+import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableMap;
 import com.interfaces.RequestData;
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.discovery.EurekaClient;
@@ -55,20 +57,19 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
     @Override
     public Map<String, Object> getRequest(Set<QuotesCriteriaBuilder> criteriaBuilders) {
         this.application = discoveryClient.getApplication(persistService);
-        localResp.clear();
-        mapResp.clear();
         try {
             boolean isAnyEmpty = true;
             boolean isServerAvailable = isServerPersistanceAvailable();
             while (isAnyEmpty && isServerAvailable) {
                 criteriaBuilders.forEach(this::getFileParseFile);
-                isAnyEmpty = !checkIsEmptyFiles();
+                isAnyEmpty = isEmptyFiles();
+                isServerAvailable = isServerPersistanceAvailable();
             }
         } catch (NoServerInEurekaExeption e) {
             Log.error(e.getMessage());
         }
-
-        return null;
+        mapResp = ImmutableMap.<String,Object>builder().put("successful","data was updated").build();
+        return mapResp;
     }
 
     private void getFileParseFile(QuotesCriteriaBuilder criteriaBuilder) {
@@ -84,13 +85,10 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
                 FileUtils.touch(f);
                 executeRequest(criteriaBuilder, f);
             } else {
-                if (FileUtils.sizeOf(f) == 0) {
-                    FileUtils.forceDelete(f);
-                    FileUtils.touch(f);
-                    executeRequest(criteriaBuilder, f);
-                }
+                if (FileUtils.sizeOf(f) == 0) executeRequest(criteriaBuilder, f);
             }
         } catch (IOException e) {
+            Log.error(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -135,10 +133,13 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
                 writer.close();
             }
         } catch (ClientProtocolException e) {
+            Log.error(e.getMessage());
             e.printStackTrace();
         } catch (UnsupportedOperationException e) {
+            Log.error(e.getMessage());
             e.printStackTrace();
         } catch (IOException e) {
+            Log.error(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -165,13 +166,15 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
                 .close(RoundOfNumber.round(array[7]))
                 .build();
         try {
-//            restTemplate.postForEntity(url,quotes, Quotes.class);
-        } catch (HttpClientErrorException ex) {
-//            System.out.println("try to save again " + quotes.getCurrency());
+            restTemplate.postForEntity(url,quotes, Quotes.class);
+        } catch (HttpClientErrorException e) {
+            if (e.getRawStatusCode() == 409){
+                Log.error("duplicate key error collection "+ quotes.toString() + " already in database");
+            }
         }
     }
 
-    private boolean checkIsEmptyFiles() {
+    private boolean isEmptyFiles() {
         final File folder = new File(filepath);
         List<File> fileArray = new ArrayList<>(Arrays.asList(folder.listFiles()));
         for (File file : fileArray) {
