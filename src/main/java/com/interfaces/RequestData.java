@@ -15,8 +15,8 @@ import java.util.*;
 public abstract class RequestData<F extends FinancialEntity> {
     protected String messageError = "Server is not available";
     protected static CloseableHttpClient httpClient = HttpClients.createDefault();
-    protected Map<String, Object> mapResp = new HashMap<>();
-    protected Set<FinancialEntity> localResp = new HashSet<>();
+    protected Map<String, Object> mapResp = new LinkedHashMap<>();
+    protected Set<FinancialEntity> localResp = new LinkedHashSet<>();
     protected HttpGet httpGet;
     public abstract Map<String,Object> getRequest(Set<QuotesCriteriaBuilder>criteriaBuilders);
 }

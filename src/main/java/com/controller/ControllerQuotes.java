@@ -27,8 +27,8 @@ public class ControllerQuotes {
     @Qualifier("Quotes")
     private RequestData quotes;
 
-    @RequestMapping(value="/reload", method = RequestMethod.GET)
-    public void reload(){
+    @RequestMapping(value = "/reload", method = RequestMethod.GET)
+    public void reload() {
         LocalDate.now().minusYears(10);
         LocalDate.now();
 
@@ -38,56 +38,49 @@ public class ControllerQuotes {
         );
     }
 
-    @RequestMapping(value="/reloadweek", method = RequestMethod.GET)
-    public void reloadWeak(){
+    @RequestMapping(value = "/reloadweek", method = RequestMethod.GET)
+    public void reloadWeak() {
         reloadFromTo(
                 LocalDate.now().minusWeeks(1).format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
                 LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
     }
 
-    @RequestMapping(value="/reloadmonth", method = RequestMethod.GET)
-    public void reloadMonth(){
+    @RequestMapping(value = "/reloadmonth", method = RequestMethod.GET)
+    public void reloadMonth() {
         reloadFromTo(
                 LocalDate.now().minusMonths(1).format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
                 LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
     }
 
 
-
-    @RequestMapping(value="/reload/{from}/{to}", method = RequestMethod.GET)
-    public void reloadFromTo(@PathVariable("from")String from,@PathVariable("from")String to ){
+    @RequestMapping(value = "/reload/{from}/{to}", method = RequestMethod.GET)
+    public void reloadFromTo(@PathVariable("from") String from, @PathVariable("from") String to) {
         Set<Currency> setOfCurrency = new LinkedHashSet<>(Arrays.asList(Currency.values()));
         Set<Period> setOfPeriod = new LinkedHashSet<>(Arrays.asList(Period.values()));
         Set<QuotesCriteriaBuilder> criteriaBuilderSet = new HashSet<>();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-        LocalDate start = LocalDate.from(LocalDate.parse(from,formatter).atStartOfDay());
-        LocalDate end = LocalDate.from(LocalDate.parse(to,formatter).atStartOfDay());
+        LocalDate start = LocalDate.from(LocalDate.parse(from, formatter).atStartOfDay());
+        LocalDate end = LocalDate.from(LocalDate.parse(to, formatter).atStartOfDay());
+        List<LocalDate> localDateList = DevideDate.devideDate(start, end);
 
-        setOfCurrency.forEach(currency -> {
-            setOfPeriod.forEach(period -> {
-                List<LocalDate> localDateList = DevideDate.devideDate(
-                        start,
-                        end,
-                        period
-                );
-                localDateList.forEach(localDate ->{
-                    for(int i=0; i < localDateList.size()-1;i++){
-                        criteriaBuilderSet.add(getCriteria(currency, period ,localDateList.get(i),localDateList.get(i+1)));
-                    }
-                });
-            });
-        });
+        for(Currency currency: setOfCurrency){
+            for(Period period: setOfPeriod){
+                for (int i = 0; i < localDateList.size() - 1; i++) {
+                    criteriaBuilderSet.add(getCriteria(currency, period, localDateList.get(i), localDateList.get(i + 1)));
+                }
+            }
+        }
         quotes.getRequest(criteriaBuilderSet);
     }
 
 
-    private QuotesCriteriaBuilder getCriteria(Currency currency,Period period, LocalDate from, LocalDate to){
+    private QuotesCriteriaBuilder getCriteria(Currency currency, Period period, LocalDate from, LocalDate to) {
         QuotesCriteriaBuilder quotesCriteriaBuilder = QuotesCriteriaBuilder.builder()
-            .currency(currency)
-            .period(period)
-            .from(from)
-            .to(to)
-            .build();
+                .currency(currency)
+                .period(period)
+                .from(from)
+                .to(to)
+                .build();
         return quotesCriteriaBuilder;
     }
 }

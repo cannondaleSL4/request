@@ -10,7 +10,7 @@ import java.util.List;
  * Created by dima on 27.05.18.
  */
 public class DevideDate {
-    public static List<LocalDate> devideDate(LocalDate from, LocalDate to, Period period){
+    public static List<LocalDate> devideDate(LocalDate from, LocalDate to){
         List<LocalDate> listOfDate = new ArrayList<>();
         while (from.isBefore(to)){
             listOfDate.add(from);
