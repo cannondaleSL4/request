@@ -40,9 +40,7 @@ target/
 /connect.lock
 /coverage
 /libpeerconnection.log
-/*.log
-npm-debug.log
-testem.log
+*.log
 /typings
 
 # e2e
