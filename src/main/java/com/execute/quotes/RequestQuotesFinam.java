@@ -67,6 +67,8 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
             }
         } catch (NoServerInEurekaExeption e) {
             Log.error(e.getMessage());
+            mapResp = ImmutableMap.<String,Object>builder().put("error",e.getMessage()).build();
+            return mapResp;
         }
         mapResp = ImmutableMap.<String,Object>builder().put("successful","data was updated").build();
         return mapResp;
@@ -76,7 +78,7 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
         String filename = criteriaBuilder.getCurrency().toString() + "-" +
                 criteriaBuilder.getFrom() + "-" +
                 criteriaBuilder.getTo() + "-" +
-                criteriaBuilder.getPeriod();
+                criteriaBuilder.getPeriod().toString();
 
         String localFilePath = filepath + "/" + filename + ".csv";
         File f = new File(localFilePath);
@@ -156,9 +158,10 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
         if (array[1].equals("15")) period = Period.FIVETEENMINUTES;
         if (array[1].equals("W")) period = Period.WEEK;
         if (array[1].equals("M")) period = Period.MONTH;
+        if (array[1].equals("60")) period = Period.ONEHOUR;
         Quotes quotes = Quotes.builder()
                 .currency(array[0])
-                .period(period)
+                .period(period.toString())
                 .data(LocalDateTime.parse(array[2] + " " + array[3], formatter))
                 .open(RoundOfNumber.round(array[4]))
                 .high(RoundOfNumber.round(array[5]))
