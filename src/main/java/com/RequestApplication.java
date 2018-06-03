@@ -24,8 +24,8 @@ public class RequestApplication {
         return new RequestLiveQuotesOldVersion();
     }
 
-    @Bean("Quotes")
-    public RequestData getQuotes(){
+    @Bean
+    public RequestQuotesFinam getQuotes(){
         return new RequestQuotesFinam();
     }
 

@@ -3,6 +3,7 @@ package com.controller;
 import com.dim.fxapp.entity.criteria.QuotesCriteriaBuilder;
 import com.dim.fxapp.entity.enums.Currency;
 import com.dim.fxapp.entity.enums.Period;
+import com.execute.quotes.RequestQuotesFinam;
 import com.interfaces.RequestData;
 import com.util.DevideDate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +25,7 @@ import java.util.*;
 public class ControllerQuotes {
 
     @Autowired
-    @Qualifier("Quotes")
-    private RequestData quotes;
+    private RequestQuotesFinam quotes;
 
     @RequestMapping(value = "/reload", method = RequestMethod.GET)
     public void reload() {
@@ -36,6 +36,11 @@ public class ControllerQuotes {
                 LocalDate.now().minusYears(10).format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
                 LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"))
         );
+    }
+
+    @RequestMapping(value = "/reloadfromexist", method = RequestMethod.GET)
+    public void reloadFromExists() {
+        quotes.reloadFromExistFiles();
     }
 
     @RequestMapping(value = "/reloadweek", method = RequestMethod.GET)

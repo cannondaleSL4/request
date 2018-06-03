@@ -5,13 +5,14 @@ import com.dim.fxapp.entity.enums.Period;
 import com.dim.fxapp.entity.impl.Quotes;
 import com.dim.fxapp.entity.impl.QuotesLive;
 import com.exeption.NoServerInEurekaExeption;
-import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.interfaces.RequestData;
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.discovery.EurekaClient;
 import com.netflix.discovery.shared.Application;
 import com.util.RoundOfNumber;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -25,14 +26,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.PostConstruct;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Stream;
 
-/**
- * Created by dima on 07.05.18.
- */
+@AllArgsConstructor
+@NoArgsConstructor
 public class RequestQuotesFinam extends RequestData<QuotesLive> {
 
     @Autowired
@@ -41,7 +45,7 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
     @Autowired
     private EurekaClient discoveryClient;
 
-    private final org.slf4j.Logger Log = LoggerFactory.getLogger(RequestQuotesFinam.class);
+    private Application application;
 
     @Value("${service.persist}")
     private String persistService;
@@ -52,26 +56,54 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
     @Value("${currency.filepath}")
     protected String filepath;
 
-    Application application;
+    private final org.slf4j.Logger Log = LoggerFactory.getLogger(RequestQuotesFinam.class);
+
+    @PostConstruct
+    private void init() {
+        application = discoveryClient.getApplication(persistService);
+    }
 
     @Override
     public Map<String, Object> getRequest(Set<QuotesCriteriaBuilder> criteriaBuilders) {
-        this.application = discoveryClient.getApplication(persistService);
+        //time restriction - 30 minutes
+        long start = System.currentTimeMillis();
+        long threshold = start + 1800000;
         try {
             boolean isAnyEmpty = true;
             boolean isServerAvailable = isServerPersistanceAvailable();
-            while (isAnyEmpty && isServerAvailable) {
+            while (isAnyEmpty && isServerAvailable && System.currentTimeMillis() - start < threshold ) {
                 criteriaBuilders.forEach(this::getFileParseFile);
                 isAnyEmpty = isEmptyFiles();
                 isServerAvailable = isServerPersistanceAvailable();
             }
+            reloadFromExistFiles();
         } catch (NoServerInEurekaExeption e) {
             Log.error(e.getMessage());
-            mapResp = ImmutableMap.<String,Object>builder().put("error",e.getMessage()).build();
+            mapResp = ImmutableMap.<String, Object>builder().put("error", e.getMessage()).build();
             return mapResp;
         }
-        mapResp = ImmutableMap.<String,Object>builder().put("successful","data was updated").build();
+        mapResp = ImmutableMap.<String, Object>builder().put("successful", "data was updated").build();
         return mapResp;
+    }
+
+    public void reloadFromExistFiles() {
+        try {
+            isServerPersistanceAvailable();
+            final File folder = new File(filepath);
+            List<File> fileArray = new ArrayList<>(Arrays.asList(folder.listFiles()));
+            for (File file : fileArray) {
+                if (FileUtils.sizeOf(file) != 0) {
+                    long start = System.currentTimeMillis();
+                    Stream<String> stream = Files.lines(Paths.get(file.getCanonicalPath()));
+                    stream.filter(p -> !p.contains("TICKER")).forEach(this::newPersist);
+                    System.out.println("TIME for read file: " + file.getCanonicalPath() + " " + (System.currentTimeMillis() - start));
+                }
+            }
+        } catch (NoServerInEurekaExeption noServerInEurekaExeption) {
+            noServerInEurekaExeption.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void getFileParseFile(QuotesCriteriaBuilder criteriaBuilder) {
@@ -121,18 +153,17 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
 
             HttpEntity entity = response.getEntity();
 
+
             if (response.getStatusLine().getStatusCode() == 200) {
                 InputStream is = entity.getContent();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-                BufferedWriter writer = new BufferedWriter(new FileWriter(f));
-                reader.readLine(); // this will read and skip the first line <TICKER>,<PER>,<DATE>,<TIME>,<OPEN>,<HIGH>,<LOW>,<CLOSE>,<VOL>
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    writer.write(line + '\n');
-                    newPersist(line);
+                FileOutputStream fos = new FileOutputStream(f);
+                int inByte;
+                while ((inByte = is.read()) != -1) {
+                    fos.write(inByte);
                 }
-                reader.close();
-                writer.close();
+                is.close();
+                fos.close();
+                client.close();
             }
         } catch (ClientProtocolException e) {
             Log.error(e.getMessage());
@@ -145,6 +176,7 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
             e.printStackTrace();
         }
     }
+
 
     private void newPersist(String line) {
         InstanceInfo instanceInfo = application.getInstances().get(0);
@@ -169,10 +201,10 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
                 .close(RoundOfNumber.round(array[7]))
                 .build();
         try {
-            restTemplate.postForEntity(url,quotes, Quotes.class);
+            restTemplate.postForEntity(url, quotes, Quotes.class);
         } catch (HttpClientErrorException e) {
-            if (e.getRawStatusCode() == 409){
-                Log.error("duplicate key error collection "+ quotes.toString() + " already in database");
+            if (e.getRawStatusCode() == 409) {
+                Log.error("duplicate key error collection " + quotes.toString() + " already in database");
             }
         }
     }
