@@ -32,5 +32,4 @@ public class RequestApplication {
     @Bean
     public RestTemplate getRestTemplate(){return new RestTemplate();}
 
-
 }

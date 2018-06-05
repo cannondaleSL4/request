@@ -1,7 +1,6 @@
 package com.controller.exeption;
 
 import com.exeption.ServerRequestExeption;
-import lombok.Data;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -22,9 +21,12 @@ public class ExeptionHandler {
         return new ServerExceptionHandlers.ErrorResponse("Any connection server problem", "Server is not available, try again latter");
     }
 
-    @Data
     public static class ErrorResponse {
         private final String code;
         private final String message;
+        public ErrorResponse(String code,String message){
+            this.code = code;
+            this.message = message;
+        }
     }
 }

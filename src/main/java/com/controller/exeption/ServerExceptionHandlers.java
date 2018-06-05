@@ -3,6 +3,7 @@ package com.controller.exeption;
 
 import com.exeption.ServerRequestDateExeption;
 import com.exeption.ServerRequestExeption;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -12,9 +13,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 
-/**
- * Created by dima on 11.12.17.
- */
 @ControllerAdvice
 @Order(1)
 public class ServerExceptionHandlers {
@@ -32,9 +30,12 @@ public class ServerExceptionHandlers {
         return new ErrorResponse("DATE_INCORRECT", "Incorrect date settings (or format) please check request format");
     }
 
-    @Data
     public static class ErrorResponse {
         private final String code;
         private final String message;
+        public ErrorResponse(String code,String message){
+           this.code = code;
+           this.message = message;
+        }
     }
 }
