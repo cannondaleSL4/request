@@ -40,7 +40,7 @@ public class ControllerQuotes {
 
     @RequestMapping(value = "/reloadfromexist", method = RequestMethod.GET)
     public void reloadFromExists() {
-        quotes.reloadFromExistFiles();
+        quotes.reload();
     }
 
     @RequestMapping(value = "/reloadweek", method = RequestMethod.GET)

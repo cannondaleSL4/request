@@ -1,16 +1,12 @@
 package com.execute.quotes;
 
 import com.dim.fxapp.entity.criteria.QuotesCriteriaBuilder;
-import com.dim.fxapp.entity.enums.Period;
-import com.dim.fxapp.entity.impl.Quotes;
 import com.dim.fxapp.entity.impl.QuotesLive;
+import com.execute.fileoperation.QuoteReaderFromFile;
+import com.execute.fileoperation.QuoteToFileWriter;
 import com.exeption.NoServerInEurekaExeption;
 import com.google.common.collect.ImmutableMap;
 import com.interfaces.RequestData;
-import com.netflix.appinfo.InstanceInfo;
-import com.netflix.discovery.EurekaClient;
-import com.netflix.discovery.shared.Application;
-import com.util.RoundOfNumber;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import org.apache.commons.io.FileUtils;
@@ -23,32 +19,17 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 
-import javax.annotation.PostConstruct;
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.time.LocalDateTime;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @NoArgsConstructor
 public class RequestQuotesFinam extends RequestData<QuotesLive> {
-
-    @Autowired
-    private RestTemplate restTemplate;
-
-    @Autowired
-    private EurekaClient discoveryClient;
-
-    private Application application;
-
-    @Value("${service.persist}")
-    private String persistService;
 
     @Value("${currency.quotes}")
     protected String MAIN;
@@ -56,80 +37,41 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
     @Value("${currency.filepath}")
     protected String filepath;
 
+    @Autowired
+    protected QuoteToFileWriter writer;
+
+    @Autowired
+    protected QuoteReaderFromFile reader;
+
     private final org.slf4j.Logger Log = LoggerFactory.getLogger(RequestQuotesFinam.class);
 
-    @PostConstruct
-    private void init() {
-        application = discoveryClient.getApplication(persistService);
-    }
+    private Map<File,QuotesCriteriaBuilder> mapOfCriteriaAndFile = new HashMap<>();
+    private Set<File> setOfFile = new HashSet<>();
 
     @Override
     public Map<String, Object> getRequest(Set<QuotesCriteriaBuilder> criteriaBuilders) {
-        //time restriction - 30 minutes
         long start = System.currentTimeMillis();
-        long threshold = start + 1800000;
-        try {
-            boolean isAnyEmpty = true;
-            boolean isServerAvailable = isServerPersistanceAvailable();
-            while (isAnyEmpty && isServerAvailable && System.currentTimeMillis() - start < threshold ) {
-                criteriaBuilders.forEach(this::getFileParseFile);
-                isAnyEmpty = isEmptyFiles();
-                isServerAvailable = isServerPersistanceAvailable();
-            }
-            reloadFromExistFiles();
-        } catch (NoServerInEurekaExeption e) {
-            Log.error(e.getMessage());
-            mapResp = ImmutableMap.<String, Object>builder().put("error", e.getMessage()).build();
-            return mapResp;
+        mapOfCriteriaAndFile.putAll(writer.getHashMapOfCreteriaAndFiles(criteriaBuilders));
+        setOfFile.addAll(writer.getHashMapOfCreteriaAndFiles(criteriaBuilders).keySet());
+        while (isContinue(start)) {
+            mapOfCriteriaAndFile.forEach(this::executeRequest);
+            mapOfCriteriaAndFile = clearMap();
         }
+        reader.reloadFromExistFiles(setOfFile);
         mapResp = ImmutableMap.<String, Object>builder().put("successful", "data was updated").build();
         return mapResp;
     }
 
-    public void reloadFromExistFiles() {
-        try {
-            isServerPersistanceAvailable();
-            final File folder = new File(filepath);
-            List<File> fileArray = new ArrayList<>(Arrays.asList(folder.listFiles()));
-            for (File file : fileArray) {
-                if (FileUtils.sizeOf(file) != 0) {
-                    long start = System.currentTimeMillis();
-                    Stream<String> stream = Files.lines(Paths.get(file.getCanonicalPath()));
-                    stream.filter(p -> !p.contains("TICKER")).forEach(this::newPersist);
-                    System.out.println("TIME for read file: " + file.getCanonicalPath() + " " + (System.currentTimeMillis() - start));
-                }
-            }
-        } catch (NoServerInEurekaExeption noServerInEurekaExeption) {
-            noServerInEurekaExeption.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void reload(){
+        final File folder = new File(filepath);
+        Set<File> setOfFile = new HashSet<>(Arrays.asList(folder.listFiles()));
+        reader.reloadFromExistFiles(setOfFile);
     }
 
-    private void getFileParseFile(QuotesCriteriaBuilder criteriaBuilder) {
-        String filename = criteriaBuilder.getCurrency().toString() + "-" +
-                criteriaBuilder.getFrom() + "-" +
-                criteriaBuilder.getTo() + "-" +
-                criteriaBuilder.getPeriod().toString();
 
-        String localFilePath = filepath + "/" + filename + ".csv";
-        File f = new File(localFilePath);
-        try {
-            if (!f.exists()) {
-                FileUtils.touch(f);
-                executeRequest(criteriaBuilder, f);
-            } else {
-                if (FileUtils.sizeOf(f) == 0) executeRequest(criteriaBuilder, f);
-            }
-        } catch (IOException e) {
-            Log.error(e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    private void executeRequest(QuotesCriteriaBuilder criteriaBuilder, File f) {
+    private void executeRequest(File file,QuotesCriteriaBuilder criteriaBuilder) {
         String stringForRequest = String.format(MAIN,
-                f.getName(),
+                file.getName(),
                 criteriaBuilder.getCurrency().getByCurrensy(criteriaBuilder.getCurrency().toString()),
                 criteriaBuilder.getCurrency().toString(),
                 criteriaBuilder.getFrom().getDayOfMonth(),
@@ -141,29 +83,20 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
                 criteriaBuilder.getTo().getYear(),
                 criteriaBuilder.getTo().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")),
                 criteriaBuilder.getPeriod().getCodeByPeriod(criteriaBuilder.getPeriod().toString()),
-                f.getName().split(("\\.(?=[^\\.]+$)"))[0],
+                file.getName().split(("\\.(?=[^\\.]+$)"))[0],
                 criteriaBuilder.getCurrency().toString()
         );
-
         try {
             CloseableHttpClient client = HttpClientBuilder.create().build();
             HttpGet request = new HttpGet(stringForRequest);
             request.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.125 Safari/537.36");
             HttpResponse response = client.execute(request);
-
             HttpEntity entity = response.getEntity();
-
-
             if (response.getStatusLine().getStatusCode() == 200) {
                 InputStream is = entity.getContent();
-                FileOutputStream fos = new FileOutputStream(f);
-                int inByte;
-                while ((inByte = is.read()) != -1) {
-                    fos.write(inByte);
-                }
-                is.close();
-                fos.close();
+                writer.writeFile(is,file);
                 client.close();
+                is.close();
             }
         } catch (ClientProtocolException e) {
             Log.error(e.getMessage());
@@ -177,53 +110,26 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
         }
     }
 
+    private HashMap<File,QuotesCriteriaBuilder> clearMap (){
+        return this.mapOfCriteriaAndFile.entrySet()
+                .stream()
+                .filter(x -> FileUtils.sizeOf(x.getKey())==0)
+                .collect(Collectors.toMap(
+                        e -> e.getKey(),
+                        e -> e.getValue(),
+                        (v1, v2) -> { throw new IllegalStateException(); },
+                        () -> new HashMap<>()));
+    }
 
-    private void newPersist(String line) {
-        InstanceInfo instanceInfo = application.getInstances().get(0);
-        String url = "http://" + instanceInfo.getIPAddr() + ":" + instanceInfo.getPort() + "/" + "quotes/";
-
-        String[] array = line.split(",");
-        Period period = null;
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yy HH:mm:ss");
-        if (array[1].equals("D")) period = Period.DAY;
-        if (array[1].equals("5")) period = Period.FIVEMINUTES;
-        if (array[1].equals("15")) period = Period.FIVETEENMINUTES;
-        if (array[1].equals("W")) period = Period.WEEK;
-        if (array[1].equals("M")) period = Period.MONTH;
-        if (array[1].equals("60")) period = Period.ONEHOUR;
-        Quotes quotes = Quotes.builder()
-                .currency(array[0])
-                .period(period.toString())
-                .data(LocalDateTime.parse(array[2] + " " + array[3], formatter))
-                .open(RoundOfNumber.round(array[4]))
-                .high(RoundOfNumber.round(array[5]))
-                .low(RoundOfNumber.round(array[6]))
-                .close(RoundOfNumber.round(array[7]))
-                .build();
+    private boolean isContinue(long start) {
+        long threshold = start + 1800000;
+        boolean isAnyEmpty = writer.isEmptyFiles(setOfFile);
+        boolean isServerAvailable = false;
         try {
-            restTemplate.postForEntity(url, quotes, Quotes.class);
-        } catch (HttpClientErrorException e) {
-            if (e.getRawStatusCode() == 409) {
-                Log.error("duplicate key error collection " + quotes.toString() + " already in database");
-            }
+            isServerAvailable = reader.isServerPersistAvailable();
+        } catch (NoServerInEurekaExeption ex) {
+            Log.error(ex.getMessage());
         }
-    }
-
-    private boolean isEmptyFiles() {
-        final File folder = new File(filepath);
-        List<File> fileArray = new ArrayList<>(Arrays.asList(folder.listFiles()));
-        for (File file : fileArray) {
-            if (FileUtils.sizeOf(file) == 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean isServerPersistanceAvailable() throws NoServerInEurekaExeption {
-        if (application == null) {
-            throw new NoServerInEurekaExeption(persistService);
-        }
-        return true;
+        return (isAnyEmpty && isServerAvailable && (System.currentTimeMillis() - start < threshold));
     }
 }
