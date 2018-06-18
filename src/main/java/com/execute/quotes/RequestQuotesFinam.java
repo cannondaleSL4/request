@@ -56,9 +56,11 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
         mapOfCriteriaAndFile.putAll(writer.getHashMapOfCreteriaAndFiles(criteriaBuilders));
         setOfFile.addAll(writer.getHashMapOfCreteriaAndFiles(criteriaBuilders).keySet());
         while (isContinue(start)) {
-            mapOfCriteriaAndFile.entrySet()
-                    .parallelStream()
-                    .forEach(entry -> executeRequest(entry.getKey(),entry.getValue()));
+//            mapOfCriteriaAndFile.entrySet()
+//                    .parallelStream()
+//                    .forEach(entry -> executeRequest(entry.getKey(),entry.getValue()));
+
+            mapOfCriteriaAndFile.forEach(this::executeRequest);
             mapOfCriteriaAndFile = clearMap();
         }
         Log.info("for server request: " + (System.currentTimeMillis()-start)/1000 + " sec.");
