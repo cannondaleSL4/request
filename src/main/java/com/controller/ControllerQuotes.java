@@ -43,6 +43,13 @@ public class ControllerQuotes {
         quotes.reload();
     }
 
+    @RequestMapping(value = "/reloadtoday", method = RequestMethod.GET)
+    public void reloadToday() {
+        reloadFromTo(
+                LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
+                LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
+    }
+
     @RequestMapping(value = "/reloadweek", method = RequestMethod.GET)
     public void reloadWeak() {
         reloadFromTo(
