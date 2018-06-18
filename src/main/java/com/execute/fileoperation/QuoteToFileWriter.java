@@ -21,15 +21,12 @@ public class QuoteToFileWriter {
     private final org.slf4j.Logger Log = LoggerFactory.getLogger(RequestQuotesFinam.class);
 
     public void writeFile(InputStream is, File file) {
-        FileOutputStream fos = null;
         if (FileUtils.sizeOf(file) == 0) {
-            try {
-                fos = new FileOutputStream(file);
+            try(FileOutputStream fos= new FileOutputStream(file)) {
                 int inByte;
                 while ((inByte = is.read()) != -1) {
                     fos.write(inByte);
                 }
-                fos.close();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {
