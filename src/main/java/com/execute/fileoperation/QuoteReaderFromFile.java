@@ -8,17 +8,13 @@ import com.netflix.appinfo.InstanceInfo;
 import com.netflix.discovery.EurekaClient;
 import com.netflix.discovery.shared.Application;
 import com.util.RoundOfNumber;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -64,7 +60,7 @@ public class QuoteReaderFromFile {
         files.parallelStream()
                 .filter(file -> FileUtils.sizeOf(file)!=0)
                 .forEach(this::newPersist);
-        System.out.println("the end: " + (System.currentTimeMillis() - start)/1000);
+       Log.info("for parse files was spent: " + (System.currentTimeMillis() - start)/1000 + " sec.");
     }
 
     public void newPersist(File file) {

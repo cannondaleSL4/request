@@ -45,18 +45,23 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
 
     private final org.slf4j.Logger Log = LoggerFactory.getLogger(RequestQuotesFinam.class);
 
-    private Map<File,QuotesCriteriaBuilder> mapOfCriteriaAndFile = new HashMap<>();
-    private Set<File> setOfFile = new HashSet<>();
+    private Map<File,QuotesCriteriaBuilder> mapOfCriteriaAndFile;
+    private Set<File> setOfFile;
 
     @Override
     public Map<String, Object> getRequest(Set<QuotesCriteriaBuilder> criteriaBuilders) {
+        mapOfCriteriaAndFile = new HashMap<>();
+        setOfFile = new HashSet<>();
         long start = System.currentTimeMillis();
         mapOfCriteriaAndFile.putAll(writer.getHashMapOfCreteriaAndFiles(criteriaBuilders));
         setOfFile.addAll(writer.getHashMapOfCreteriaAndFiles(criteriaBuilders).keySet());
         while (isContinue(start)) {
-            mapOfCriteriaAndFile.forEach(this::executeRequest);
+            mapOfCriteriaAndFile.entrySet()
+                    .parallelStream()
+                    .forEach(entry -> executeRequest(entry.getKey(),entry.getValue()));
             mapOfCriteriaAndFile = clearMap();
         }
+        Log.info("for server request: " + (System.currentTimeMillis()-start)/1000 + " sec.");
         reader.reloadFromExistFiles(setOfFile);
         mapResp = ImmutableMap.<String, Object>builder().put("successful", "data was updated").build();
         return mapResp;
