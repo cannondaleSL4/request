@@ -45,7 +45,7 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
 
     private final org.slf4j.Logger Log = LoggerFactory.getLogger(RequestQuotesFinam.class);
 
-    private Map<File,QuotesCriteriaBuilder> mapOfCriteriaAndFile;
+    private Map<File, QuotesCriteriaBuilder> mapOfCriteriaAndFile;
     private Set<File> setOfFile;
 
     @Override
@@ -56,25 +56,23 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
         mapOfCriteriaAndFile.putAll(writer.getHashMapOfCreteriaAndFiles(criteriaBuilders));
         setOfFile.addAll(writer.getHashMapOfCreteriaAndFiles(criteriaBuilders).keySet());
         while (isContinue(start)) {
-            mapOfCriteriaAndFile.entrySet()
-                    .parallelStream()
-                    .forEach(entry -> executeRequest(entry.getKey(),entry.getValue()));
+            mapOfCriteriaAndFile.forEach(this::executeRequest);
             mapOfCriteriaAndFile = clearMap();
         }
-        Log.info("for server request: " + (System.currentTimeMillis()-start)/1000 + " sec.");
+        Log.info("for server request: " + (System.currentTimeMillis() - start) / 1000 + " sec.");
         reader.reloadFromExistFiles(setOfFile);
         mapResp = ImmutableMap.<String, Object>builder().put("successful", "data was updated").build();
         return mapResp;
     }
 
-    public void reload(){
+    public void reload() {
         final File folder = new File(filepath);
         Set<File> setOfFile = new HashSet<>(Arrays.asList(folder.listFiles()));
         reader.reloadFromExistFiles(setOfFile);
     }
 
 
-    private void executeRequest(File file,QuotesCriteriaBuilder criteriaBuilder) {
+    private void executeRequest(File file, QuotesCriteriaBuilder criteriaBuilder) {
         String stringForRequest = String.format(MAIN,
                 file.getName(),
                 criteriaBuilder.getCurrency().getByCurrensy(criteriaBuilder.getCurrency().toString()),
@@ -99,7 +97,7 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
             HttpEntity entity = response.getEntity();
             if (response.getStatusLine().getStatusCode() == 200) {
                 InputStream is = entity.getContent();
-                writer.writeFile(is,file);
+                writer.writeFile(is, file);
                 client.close();
                 is.close();
             }
@@ -115,14 +113,16 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
         }
     }
 
-    private HashMap<File,QuotesCriteriaBuilder> clearMap (){
+    private HashMap<File, QuotesCriteriaBuilder> clearMap() {
         return this.mapOfCriteriaAndFile.entrySet()
                 .stream()
-                .filter(x -> FileUtils.sizeOf(x.getKey())==0)
+                .filter(x -> FileUtils.sizeOf(x.getKey()) == 0)
                 .collect(Collectors.toMap(
                         e -> e.getKey(),
                         e -> e.getValue(),
-                        (v1, v2) -> { throw new IllegalStateException(); },
+                        (v1, v2) -> {
+                            throw new IllegalStateException();
+                        },
                         () -> new HashMap<>()));
     }
 

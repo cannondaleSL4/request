@@ -49,17 +49,13 @@ public class QuoteToFileWriter {
                 + criteriaBuilder.getTo() + "-" + criteriaBuilder.getPeriod().toString() + ".csv";
         String localFilePath = filepath + "/" + filename;
         File file = new File(localFilePath);
-        if (!file.exists()){
-            try {
-                FileUtils.touch(file);
-            } catch (IOException e) {
-                Log.error("could not create file: " + file);
-            }
-            return file;
-        } else {
-            if (FileUtils.sizeOf(file)==0)return file;
+
+        try {
+            if (!file.exists())FileUtils.touch(file);
+        } catch (IOException e) {
+            Log.error("could not create file: " + file);
         }
-        return null;
+        return file;
     }
 
     public boolean isEmptyFiles(Set<File> setOfFile) {
