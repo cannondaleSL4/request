@@ -35,7 +35,7 @@ public class QuoteToFileWriter {
         }
     }
 
-    public Map<File, QuotesCriteriaBuilder> getHashMapOfCreteriaAndFiles(final Set<QuotesCriteriaBuilder> criteriaBuilders) {
+    public Map<File, QuotesCriteriaBuilder> getHashMapOfCriteriaAndFiles(final Set<QuotesCriteriaBuilder> criteriaBuilders) {
         return criteriaBuilders.stream()
                 .collect(Collectors.toMap(
                         this::makeFile, k -> k));
@@ -48,7 +48,12 @@ public class QuoteToFileWriter {
         File file = new File(localFilePath);
 
         try {
-            if (!file.exists())FileUtils.touch(file);
+            if (!file.exists()){
+                FileUtils.touch(file);
+            } else {
+                FileUtils.forceDelete(file);
+                FileUtils.touch(file);
+            }
         } catch (IOException e) {
             Log.error("could not create file: " + file);
         }

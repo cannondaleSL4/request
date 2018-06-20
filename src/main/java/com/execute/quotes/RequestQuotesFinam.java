@@ -53,8 +53,8 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
         mapOfCriteriaAndFile = new HashMap<>();
         setOfFile = new HashSet<>();
         long start = System.currentTimeMillis();
-        mapOfCriteriaAndFile.putAll(writer.getHashMapOfCreteriaAndFiles(criteriaBuilders));
-        setOfFile.addAll(writer.getHashMapOfCreteriaAndFiles(criteriaBuilders).keySet());
+        mapOfCriteriaAndFile.putAll(writer.getHashMapOfCriteriaAndFiles(criteriaBuilders));
+        setOfFile.addAll(writer.getHashMapOfCriteriaAndFiles(criteriaBuilders).keySet());
         while (isContinue(start)) {
             mapOfCriteriaAndFile.forEach(this::executeRequest);
             mapOfCriteriaAndFile = clearMap();
