@@ -1,13 +1,9 @@
 package com.controller;
 
 import com.dim.fxapp.entity.criteria.QuotesCriteriaBuilder;
-import com.dim.fxapp.entity.enums.Currency;
-import com.dim.fxapp.entity.enums.Period;
 import com.execute.quotes.RequestQuotesFinam;
-import com.interfaces.RequestData;
-import com.util.DevideDate;
+import com.services.CreteriaService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;

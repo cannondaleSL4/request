@@ -20,22 +20,7 @@ import java.util.TimerTask;
 @SpringBootApplication
 @EnableDiscoveryClient
 public class RequestApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(RequestApplication.class, args) ;
     }
-
-    @Bean("LiveQuotesOldVersion")
-    public RequestData getLiveQuotesOldVersion(){
-        return new RequestLiveQuotesOldVersion();
-    }
-
-    @Bean
-    public RequestQuotesFinam getQuotes(){
-        return new RequestQuotesFinam();
-    }
-
-    @Bean
-    public RestTemplate getRestTemplate(){return new RestTemplate();}
-
 }

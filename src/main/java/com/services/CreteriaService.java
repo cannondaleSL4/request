@@ -1,16 +1,14 @@
-package com.controller;
+package com.services;
 
 import com.dim.fxapp.entity.criteria.QuotesCriteriaBuilder;
 import com.dim.fxapp.entity.enums.Currency;
 import com.dim.fxapp.entity.enums.Period;
 import com.util.DevideDate;
-import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-@Service
 public class CreteriaService {
 
     public Set<QuotesCriteriaBuilder> getCriteria(String from, String to) {

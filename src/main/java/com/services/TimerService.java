@@ -1,9 +1,8 @@
-package com.controller;
+package com.services;
 
 import com.dim.fxapp.entity.criteria.QuotesCriteriaBuilder;
 import com.execute.quotes.RequestQuotesFinam;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -11,7 +10,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
-@Component
+
 public class TimerService {
 
     private final CreteriaService creteriaService;
