@@ -1,5 +1,6 @@
 package com.execute.fileoperation;
 
+import com.RequestApplication;
 import com.controller.exeption.NoServerInEurekaExeption;
 import com.dim.fxapp.entity.enums.Period;
 import com.dim.fxapp.entity.impl.Quotes;
@@ -12,6 +13,7 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.restart.RestartEndpoint;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -24,6 +26,7 @@ import org.springframework.web.client.RestTemplate;
 import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -40,6 +43,9 @@ public class QuoteReaderFromFile {
     @Autowired
     private EurekaClient discoveryClient;
 
+    @Autowired
+    private RestartEndpoint restartEndpoint;
+
     private Application application;
 
     @Value("${service.persist}")
@@ -51,8 +57,14 @@ public class QuoteReaderFromFile {
     private final org.slf4j.Logger Log = LoggerFactory.getLogger(RequestQuotesFinam.class);
 
     @PostConstruct
-    public void init() {
+    public void init() throws IOException, URISyntaxException {
         application = discoveryClient.getApplication(persistService);
+
+        if (application == null){
+            Thread restartThread = new Thread(() -> restartEndpoint.restart());
+            restartThread.setDaemon(false);
+            restartThread.start();
+        }
     }
 
     public void reloadFromExistFiles(Set<File> files) {
