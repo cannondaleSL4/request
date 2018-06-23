@@ -1,20 +1,16 @@
 package com.controller.exeption;
 
 
-import com.exeption.ServerRequestDateExeption;
-import com.exeption.ServerRequestExeption;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import org.springframework.core.annotation.Order;
+import com.controller.exeption.ServerRequestDateExeption;
+import com.controller.exeption.ServerRequestExeption;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 
-@ControllerAdvice
-@Order(1)
+//@ControllerAdvice
+//@Order(1)
 public class ServerExceptionHandlers {
     @ExceptionHandler(ServerRequestExeption.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

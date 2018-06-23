@@ -2,9 +2,9 @@ package com.execute.quotes;
 
 import com.dim.fxapp.entity.criteria.QuotesCriteriaBuilder;
 import com.dim.fxapp.entity.impl.QuotesLive;
+import com.controller.exeption.*;
 import com.execute.fileoperation.QuoteReaderFromFile;
 import com.execute.fileoperation.QuoteToFileWriter;
-import com.exeption.NoServerInEurekaExeption;
 import com.google.common.collect.ImmutableMap;
 import com.interfaces.RequestData;
 import lombok.AllArgsConstructor;

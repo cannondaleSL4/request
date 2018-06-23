@@ -3,7 +3,7 @@ package com.execute.livequotes;
 import com.dim.fxapp.entity.FinancialEntity;
 import com.dim.fxapp.entity.criteria.QuotesCriteriaBuilder;
 import com.dim.fxapp.entity.impl.QuotesLive;
-import com.exeption.ServerRequestExeption;
+import com.controller.exeption.ServerRequestExeption;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.interfaces.RequestData;
 import org.apache.http.HttpEntity;

@@ -1,4 +1,4 @@
-package com.exeption;
+package com.controller.exeption;
 
 /**
  * Created by dima on 02.06.18.

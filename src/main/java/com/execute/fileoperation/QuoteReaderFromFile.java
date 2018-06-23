@@ -1,9 +1,9 @@
 package com.execute.fileoperation;
 
+import com.controller.exeption.NoServerInEurekaExeption;
 import com.dim.fxapp.entity.enums.Period;
 import com.dim.fxapp.entity.impl.Quotes;
 import com.execute.quotes.RequestQuotesFinam;
-import com.exeption.NoServerInEurekaExeption;
 import com.netflix.appinfo.InstanceInfo;
 import com.netflix.discovery.EurekaClient;
 import com.netflix.discovery.shared.Application;

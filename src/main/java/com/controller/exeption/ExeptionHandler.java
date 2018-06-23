@@ -1,6 +1,5 @@
 package com.controller.exeption;
 
-import com.exeption.ServerRequestExeption;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -14,6 +13,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ControllerAdvice
 @Order(100)
 public class ExeptionHandler {
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
