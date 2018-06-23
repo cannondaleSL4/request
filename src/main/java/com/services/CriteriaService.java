@@ -9,7 +9,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-public class CreteriaService {
+public class CriteriaService {
 
     public Set<QuotesCriteriaBuilder> getCriteria(String from, String to) {
         Set<Currency> setOfCurrency = new LinkedHashSet<>(Arrays.asList(Currency.values()));

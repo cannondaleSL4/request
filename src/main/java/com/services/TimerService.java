@@ -13,13 +13,13 @@ import java.util.TimerTask;
 
 public class TimerService {
 
-    private final CreteriaService creteriaService;
+    private final CriteriaService criteriaService;
     private final RequestQuotesFinam requestQuotesFinam;
 
     @Autowired
-    public TimerService(RequestQuotesFinam requestQuotesFinam,CreteriaService creteriaService){
+    public TimerService(RequestQuotesFinam requestQuotesFinam,CriteriaService criteriaService){
         this.requestQuotesFinam = requestQuotesFinam;
-        this.creteriaService = creteriaService;
+        this.criteriaService = criteriaService;
 
         /**every 2 hours - 7200000 millisec */
         Timer timer = new Timer();
@@ -37,7 +37,7 @@ public class TimerService {
 
             if (from.getDayOfWeek().getValue() != 6  &&
                     from.getDayOfWeek().getValue() != 7 ){
-                criteriaBuilders = creteriaService.getCriteria(from.format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
+                criteriaBuilders = criteriaService.getCriteria(from.format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
                         to.format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
                 requestQuotesFinam.getRequest(criteriaBuilders);
             }

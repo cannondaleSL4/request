@@ -2,7 +2,7 @@ package com.controller;
 
 import com.dim.fxapp.entity.criteria.QuotesCriteriaBuilder;
 import com.execute.quotes.RequestQuotesFinam;
-import com.services.CreteriaService;
+import com.services.CriteriaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,12 +22,12 @@ public class ControllerQuotes {
 
 
     private RequestQuotesFinam quotes;
-    private CreteriaService creteriaService;
+    private CriteriaService criteriaService;
 
     @Autowired
-    public ControllerQuotes(RequestQuotesFinam quotes, CreteriaService creteriaService){
+    public ControllerQuotes(RequestQuotesFinam quotes, CriteriaService criteriaService){
         this.quotes = quotes;
-        this.creteriaService = creteriaService;
+        this.criteriaService = criteriaService;
     }
 
 
@@ -77,7 +77,7 @@ public class ControllerQuotes {
 
     @RequestMapping(value = "/reload/{from}/{to}", method = RequestMethod.GET)
     public void reloadFromTo(@PathVariable("from") String from, @PathVariable("from") String to) {
-        Set<QuotesCriteriaBuilder> criteriaBuilderSet = creteriaService.getCriteria(from,to);
+        Set<QuotesCriteriaBuilder> criteriaBuilderSet = criteriaService.getCriteria(from,to);
         quotes.getRequest(criteriaBuilderSet);
     }
 

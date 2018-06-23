@@ -3,7 +3,7 @@ package com.configuration;
 import com.execute.livequotes.RequestLiveQuotesOldVersion;
 import com.execute.quotes.RequestQuotesFinam;
 import com.interfaces.RequestData;
-import com.services.CreteriaService;
+import com.services.CriteriaService;
 import com.services.TimerService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,8 +31,8 @@ public class BeanConfiguration {
     }
 
     @Bean
-    public CreteriaService getCriteriaService() {
-        return new CreteriaService();
+    public CriteriaService getCriteriaService() {
+        return new CriteriaService();
     }
 
     @Bean
