@@ -23,7 +23,7 @@ public class TimerService {
 
         /**every 2 hours - 7200000 millisec */
         Timer timer = new Timer();
-        timer.schedule(new RemindTask(), 0,60000);
+        timer.schedule(new RemindTask(), 0,7200000);
     }
 
     class RemindTask extends TimerTask {
