@@ -69,7 +69,7 @@ public class QuoteReaderFromFile {
 
     public void reloadFromExistFiles(Set<File> files) {
         long start = System.currentTimeMillis();
-        files.parallelStream()
+        files.stream()
                 .filter(file -> FileUtils.sizeOf(file)!=0)
                 .forEach(this::newPersist);
        Log.info("for parse files was spent: " + (System.currentTimeMillis() - start)/1000 + " sec.");
@@ -79,6 +79,7 @@ public class QuoteReaderFromFile {
         InstanceInfo instanceInfo = application.getInstances().get(0);
         final String URL = "http://" + instanceInfo.getIPAddr() + ":" + instanceInfo.getPort() + "/quotes/savelist";
         try {
+            long start = System.currentTimeMillis();
             List<Quotes> listOfQuote = Files.lines(file.toPath())
                     .filter(str -> !str.contains("TICKER"))
                     .collect(Collectors.toList())
@@ -89,6 +90,7 @@ public class QuoteReaderFromFile {
             headers.setContentType(MediaType.APPLICATION_JSON);
             org.springframework.http.HttpEntity httpEntity = new org.springframework.http.HttpEntity(listOfQuote, headers);
             restTemplate.exchange(URL, HttpMethod.POST, httpEntity, String.class);
+            Log.info(file.getName() + " was persisted for: " + (System.currentTimeMillis() - start)/1000 + " sec.");
         } catch (HttpClientErrorException e) {
             Log.error(e.getMessage());
         }catch (HttpServerErrorException e){
