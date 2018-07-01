@@ -55,3 +55,5 @@ currency:
 # p=8 - 1 day
 # p=9 - 1 week
 # p=10 - 1 months
+
+#http://export.finam.ru/GBPCAD-2018-07-01-2018-07-02-D.csv?market=5&em=181388&code=GBPCAD&apply=0&df=1&mf=6&yf=2018&from=01.07.2018&dt=2&mt=6&yt=2018&to=02.07.2018&p=8&f=GBPCAD-2018-07-01-2018-07-02-D&e=.csv&cn=GBPCAD&dtf=4&tmf=3&MSOR=1&mstimever=0&sep=1&sep2=2&datf=1&at=1&fsp=1
