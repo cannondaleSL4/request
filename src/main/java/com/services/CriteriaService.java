@@ -4,11 +4,13 @@ import com.dim.fxapp.entity.criteria.QuotesCriteriaBuilder;
 import com.dim.fxapp.entity.enums.Currency;
 import com.dim.fxapp.entity.enums.Period;
 import com.util.DevideDate;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+@Service
 public class CriteriaService {
 
     public Set<QuotesCriteriaBuilder> getCriteria(String from, String to) {
@@ -31,7 +33,7 @@ public class CriteriaService {
         return criteriaBuilderSet;
     }
 
-    private QuotesCriteriaBuilder getCriteria(Currency currency, Period period, LocalDate from, LocalDate to) {
+    public QuotesCriteriaBuilder getCriteria(Currency currency, Period period, LocalDate from, LocalDate to) {
         QuotesCriteriaBuilder quotesCriteriaBuilder = QuotesCriteriaBuilder.builder()
                 .currency(currency)
                 .period(period)

@@ -1,6 +1,7 @@
 package com.controller;
 
 import com.dim.fxapp.entity.criteria.QuotesCriteriaBuilder;
+import com.execute.fileoperation.QuoteReaderFromFile;
 import com.execute.quotes.RequestQuotesFinam;
 import com.services.CriteriaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,8 @@ import java.util.*;
 @RequestMapping(value = "/quotes")
 public class ControllerQuotes {
 
+    @Autowired
+    private QuoteReaderFromFile readQuotes;
 
     private RequestQuotesFinam quotes;
     private CriteriaService criteriaService;
@@ -30,6 +33,10 @@ public class ControllerQuotes {
         this.criteriaService = criteriaService;
     }
 
+    @RequestMapping(value = "reloadEmpty", method = RequestMethod.GET)
+    public void reloadEmptyFiles(){
+        quotes.getRequest(readQuotes.reloadEmpty());
+    }
 
     @RequestMapping(value = "/reload", method = RequestMethod.GET)
     public void reload() {
@@ -44,7 +51,7 @@ public class ControllerQuotes {
 
     @RequestMapping(value = "/reloadfromexist", method = RequestMethod.GET)
     public void reloadFromExists() {
-        quotes.reload();
+        readQuotes.reload();
     }
 
     @RequestMapping(value = "/reloadtoday", method = RequestMethod.GET)
@@ -63,15 +70,21 @@ public class ControllerQuotes {
     @RequestMapping(value = "/reloadweek", method = RequestMethod.GET)
     public void reloadWeak() {
         reloadFromTo(
-                LocalDate.now().minusWeeks(1).format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
-                LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
+                LocalDate.now()
+                        .minusWeeks(1)
+                        .format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
+                LocalDate.now()
+                        .format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
     }
 
     @RequestMapping(value = "/reloadmonth", method = RequestMethod.GET)
     public void reloadMonth() {
         reloadFromTo(
-                LocalDate.now().minusMonths(1).format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
-                LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
+                LocalDate.now()
+                        .minusMonths(1).
+                        format(DateTimeFormatter.ofPattern("dd-MM-yyyy")),
+                LocalDate.now()
+                        .format(DateTimeFormatter.ofPattern("dd-MM-yyyy")));
     }
 
 

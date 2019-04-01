@@ -56,7 +56,9 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
         mapOfCriteriaAndFile.putAll(writer.getHashMapOfCriteriaAndFiles(criteriaBuilders));
         setOfFile.addAll(writer.getHashMapOfCriteriaAndFiles(criteriaBuilders).keySet());
         while (isContinue(start)) {
-            mapOfCriteriaAndFile.forEach(this::executeRequest);
+            mapOfCriteriaAndFile.entrySet()
+                    .parallelStream()
+                    .forEach(entry -> executeRequest(entry.getKey(),entry.getValue()));
             mapOfCriteriaAndFile = clearMap();
         }
         Log.info("for server request: " + (System.currentTimeMillis()-start)/1000 + " sec.");
@@ -64,13 +66,6 @@ public class RequestQuotesFinam extends RequestData<QuotesLive> {
         mapResp = ImmutableMap.<String, Object>builder().put("successful", "data was updated").build();
         return mapResp;
     }
-
-    public void reload(){
-        final File folder = new File(filepath);
-        Set<File> setOfFile = new HashSet<>(Arrays.asList(folder.listFiles()));
-        reader.reloadFromExistFiles(setOfFile);
-    }
-
 
     private void executeRequest(File file,QuotesCriteriaBuilder criteriaBuilder) {
         String stringForRequest = String.format(MAIN,
