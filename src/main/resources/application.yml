@@ -5,7 +5,11 @@ spring:
   application:
     name: request
 
-logging.level.org.apache.http: info
+logging.level.org:
+  springframework.web: DEBUG
+  hibernate: ERROR
+  apache.http: INFO
+
 # that line for restarting application in case persist app is not available
 management.endpoint.restart.enabled: true
 
